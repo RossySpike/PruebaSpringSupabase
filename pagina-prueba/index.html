@@ -1,0 +1,257 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Prueba de endpoints</title>
+    <style>
+      html {
+        background-color: #f4f4f6;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+      }
+      header {
+        box-shadow: 0 0 17px rgba(0, 0, 0, 0.1);
+        background-color: lightgreen;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #result {
+        border: 1px solid white;
+        width: 400px;
+        overflow: auto;
+        height: 300px;
+        background-color: white;
+        border-radius: 10px;
+        padding: 1em;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      main {
+        display: flex;
+        gap: 2em;
+        align-items: space-between;
+      }
+      form {
+        padding: 1em;
+        background-color: white;
+        width: 400px;
+        border: 1px solid white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        & section {
+          width: 100%;
+          & button {
+            width: 30%;
+          }
+        }
+      }
+      #submit-button {
+        background-color: lightgreen;
+        border-color: green;
+        margin-top: 1em;
+        width: 100%;
+        height: 3em;
+      }
+      button:hover {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Spring mvc + Supabase</h1>
+      <p>Prueba de endpoints. Hecho por Johnny.</p>
+    </header>
+    <main>
+      <form>
+        <label for="endpoint" submit="none"
+          >Endpoint (recuerda incluir el puerto. Ej:
+          http://localhost:8080):</label
+        >
+        <input type="text" id="endpoint" name="endpoint" />
+        <section id="actions">
+          <h3>Acciones</h3>
+          <button class="spawn-content">Ver datos</button>
+          <button class="spawn-content">Cambiar Datos</button>
+          <button id="delete-data-button">Agregar</button>
+        </section>
+
+        <section id="fields">
+          <button>id</button>
+          <button>name</button>
+          <button>releasedate</button>
+        </section>
+        <section id="change-data">
+          <div>
+            <label for="id">ID:</label>
+
+            <input disabled="true" type="text" id="id" name="id" />
+          </div>
+          <div>
+            <label for="name">Name:</label>
+            <input disabled="true" type="text" id="name" name="name" />
+          </div>
+          <div>
+            <label for="releasedate">Release Date:</label>
+            <input
+              disabled="true"
+              type="text"
+              id="releasedate"
+              name="releasedate"
+            />
+          </div>
+        </section>
+        <button id="submit-button" type="submit">Enviar</button>
+      </form>
+      <div id="result">
+        <p></p>
+      </div>
+    </main>
+  </body>
+  <script>
+    const urlInput = document.getElementById("endpoint");
+    const resultDiv = document.getElementById("result").querySelector("p");
+    const changeDataSection = document.getElementById("change-data");
+    const form = document.querySelector("form");
+    const deleteDataButton = document.getElementById("delete-data-button");
+    const actionsSection = document.getElementById("actions");
+    const fieldsSection = document.getElementById("fields");
+    const submitButton = document.getElementById("submit-button");
+    const actionButtons = document.querySelectorAll("#actions button");
+    let uri = "";
+    let activeFields = [0, 0, 0]; // id, name, releasedate
+    let action = "";
+    const dataEntries = document.querySelectorAll("#change-data input");
+    const fields = fieldsSection.getElementsByTagName("button");
+    for (let i = 0; i < fields.length; i++) {
+      fields[i].addEventListener("click", (event) => {
+        activeFields[i] = 1 - activeFields[i];
+        if (activeFields[i] === 1) {
+          fields[i].style.backgroundColor = "lightgreen";
+          dataEntries[i].value = "";
+          dataEntries[i].disabled = false;
+        } else {
+          fields[i].style.backgroundColor = "";
+          dataEntries[i].value = "";
+          dataEntries[i].disabled = true;
+        }
+      });
+    }
+
+    actionButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        actionButtons.forEach((bttn) => {
+          bttn.style.backgroundColor = "";
+        });
+        if (button.style.backgroundColor != "lightgreen") {
+          button.style.backgroundColor = "lightgreen";
+        }
+        action = event.target.textContent;
+
+        console.log(button);
+      });
+    });
+    urlInput.addEventListener("input", (event) => {
+      uri = event.target.value;
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+    });
+    submitButton.addEventListener("click", async (event) => {
+      // Casos de fallo ...
+
+      if (!uri || uri.trim() === "") {
+        alert("Indica la direccion del servidor!");
+        return;
+      }
+      let uriBuilder = uri;
+      let method;
+      let body = {};
+      switch (action) {
+        case "Ver datos":
+          uriBuilder += "/getMovies";
+          if (dataEntries[0].value) {
+            uriBuilder += `?id=${dataEntries[0].value}`;
+          }
+          method = "GET";
+          break;
+        case "Cambiar Datos":
+          if (!dataEntries[0].value) {
+            alert("Para cambiar datos, el id es obligatorio");
+            return;
+          }
+          uriBuilder += "/updateMovie";
+          method = "PATCH";
+          uriBuilder += `?id=${dataEntries[0].value}`;
+
+          bodyBuilder = {};
+          if (dataEntries[1].value) {
+            bodyBuilder.name = dataEntries[1].value;
+          }
+          if (dataEntries[2].value) {
+            bodyBuilder.releasedate = dataEntries[2].value;
+          }
+          body = {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(bodyBuilder),
+          };
+          console.log(bodyBuilder.toString());
+          console.log(uriBuilder);
+          console.log(body);
+          break;
+        case "Agregar":
+          uriBuilder += "/addMovie";
+          method = "POST";
+
+          bodyBuilder = {};
+          if (dataEntries[0].value) {
+            bodyBuilder.id = dataEntries[0].value;
+          }
+          if (dataEntries[1].value) {
+            bodyBuilder.name = dataEntries[1].value;
+          }
+          if (dataEntries[2].value) {
+            bodyBuilder.releasedate = dataEntries[2].value;
+          }
+          body = {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(bodyBuilder),
+          };
+          console.log(bodyBuilder.toString());
+          console.log(uriBuilder);
+          console.log(body);
+          break;
+      }
+
+      const response = await fetch(uriBuilder, body);
+      try {
+        resultDiv.textContent = "cargando...";
+        console.log(response);
+        if (response.ok) {
+          const data = await response.json(); // lee el cuerpo
+          resultDiv.textContent = JSON.stringify(data, null, 2); // lo muestra bonito
+        } else {
+          resultDiv.textContent = `Error ${response.status}: ${response.statusText}`;
+        }
+      } catch (error) {
+        if (response.ok && method != "GET") {
+          resultDiv.textContent = `Datos cambiados correctamente (el servidor no manda respuesta)`;
+          return;
+        }
+        resultDiv.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</html>
