@@ -4,6 +4,13 @@ La directorio demo contiene el codigo java, mientras que el directorio pagina-pr
 
 ## Importante
 
+**Recomiendo leer todos los archivos `.md`**
+
+Use:
+
+- maven.
+- java 21.
+
 El codigo esta ahi mas o menos trate de usar el `Modelo Vista Controlador` en el proyecto de java sin embargo al ser muy breve la vista quedo de por fuera (o al menos no vi una forma de integrar una vista explicita, en menos palabras: skill issue.)
 
 Recomiendo ejecutar primero el server luego abrir la pagina porque si usan el plugin de live-preview o cualquier cosa que inicie una comunicacion a traves de localhost puede generar problemas porque el server siempre va a querer agarrar localhost:8080
